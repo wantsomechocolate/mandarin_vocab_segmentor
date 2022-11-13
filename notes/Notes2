@@ -1,0 +1,37 @@
+lets say are start with 
+干事
+
+I know it's the first letter so I add it with the null parent IF I don't find it as a key
+
+Then I make the parent the current node and ssee if it contains the current key (second char)
+
+
+
+
+
+Initialize root node
+parent will stay null
+is word will stay false
+children will be an empty dictionary
+
+for each word, start with root node and look through all the letters in the word, keeping track of the word up to that point. 
+
+parent_node = root_node
+
+for i in word.length.times
+	node = new Node()
+	node.parent = parent_node
+	node.is_word = global_dict.contains(word[0,i+1])
+	node.children = {}
+
+	## make this a child of the previous node
+
+	if parent_node.children.has_key?(word[i])
+		## this child already exists so just set the new parent to it
+		parent_node = parent_node.children[word[i]]
+	else
+		## you need to add the child node to the parent, and then set it
+		parent_node.children[word[i]] = node
+		parent_node = node
+
+		

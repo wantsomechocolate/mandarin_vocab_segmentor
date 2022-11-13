@@ -1,0 +1,161 @@
+Algorithm
+
+I need a trie? Or the thing that Anqi has been using that stores 
+The most common words in a trie-like structure
+
+So first thing I need to do is create that tree
+That's part of how I figure out if a word is likely part of set or not
+I can also assign likliehoods in my datastructure in a way that lets me know if something downstream has a higher liklihood
+
+To make the trie I can sort all the words, that way they'll all show up with their characters grouped already
+
+After I have the tree, start with the first character and follow the tree until you reach a deadend (or the thing is too low?)
+BUT, just becuase you found a match in the word list, doesn't mean that the thing you found isn't actually split up
+So you still need to follow the tree for each subsequent character individually  in case you something like 
+
+ABC where AB is in the dictionary, but BC is alo there, and ABC is not there, how do you decide between AB C and A BC? 
+I guess a good first pass would be whichever combination has the higher combined sum (higher combined frequency)
+
+
+
+
+FULL SEGMENTATION:
+	Start at the first character of a string.
+	extract every word that appears starting with the first character, no matter how long it is
+	remove the first character and continue the process.
+
+
+	Dealing with stop words - isn't necessary, because the inner while stops when things aren't found in the dictionary
+	if you get to something in the stop words list, reset left to be the index of the end of the stop word
+
+
+	Go through and create a dictionary, if something is already in the dictionary, then increment it's counter
+	If a longer word is found, that means that it's the parent of the previous shorter words
+
+
+My Algo
+	Go through and do a "full segmentation" but in the first pass, keep only the longest dictionary words
+
+	If a word is already in the dict, then simply increment it's counter and move on
+
+	If a word is not yet in the dict, then you want to see which dictionary words are contained within that word, do a brute force of every combination to find out. If you find anything (you should at least find the individual characters) then for now just store them in a separate dict with the parent as the key and a list of dicts as the value, each dict will contain the word that was found and it's global freq. also store a set of the children words for faster lookups. 
+
+	It really sounds like I want a database table. But then my lookups won't be constant time anymore, I could have some helper sets for my searches and then use the DB for when I need to actually retrieve and write data?
+
+	This way you only do the brute force method once for each word encountered 
+	The problem is that what happens if I find abcd in the dictionary
+	then I'll look for a, b, c, d, ab, bc, cd, abc, bcd
+	But then later on if I encounter abc, I don't need to do all the work again of looking at a,b,c,ab,bc because I've dont those lookups already, right?
+
+
+
+
+My Algo #2
+	If a char is in the global dict, then do something, right?
+	If the word formed by adding an additional character is also in the global dict, then get the full segmentation of those two characters (just the two characters by themselves, plus the two characters combined)
+
+	If the word formed by adding another character (Three now) is in the global dict, then the full segemntation is something like this
+
+	A,B,C,AB,BC,ABC
+	We already have 
+	A,B,AB
+	So we are just adding the new character C, the new ABC, but also BC needs to be added
+
+	For four it's
+
+	A,B,C,D, AB, BC, CD, ABC, BCD, ABCD
+
+	which is missing D, CD, BCD, ABCD
+
+	So adding a character means that you take the full segmentation from n-1 and then you add:
+	word[n-1:n] from n to 1 or something like that. and that's if they are in the dictionary
+
+	So store all of those results somewhere? Then I'll be storing a lot of redundant info potentially.  
+
+
+
+	I think my main goal from all of this should be something like a numpy table that has all the words that have been found, the words they were found in
+
+	Then users can filter out unwanted words using frequency in the global dict, and also frequency in the document.
+
+
+
+My Algo #3
+	I want the longest word you can get from each starting character
+	as long as that word isn't completely contained within the previous item
+	If you encounter something not in the dictionary, note them, especially if they appear in series
+	if you enounter something in stopwords, add it to a dict of encountered stop words I guess. 
+	increment to the next starting character
+
+
+	start at a character
+	#if that character is in stopwords, add it to the output with it's count and type (stop, dict, unknown)
+	#	if unknown words is blank, then ignore it, if not add it to the list as a unknown word and then blank the unknown words temp var
+	
+	If that character is in the dictionary, then begin the process of seeing how far you can go before it's not in the dictionary (the dictionary will include numbers, letters, all kinds of crazy stuff, stopwords, stop chars, etc.)
+
+		if unknown words is blank, then ignore it, if not add it to the list as a unknown word and then blank the unknown words temp var
+
+		Then incrememnt right until you find that you no longer have a dictionary word, this could fail after the first attempt, or it could not fail! either way, when you're done, if right > right_max, add the word to the output (or increment count if it's already there. ) and update right_max, if it's not then skip it
+
+		
+	If that character is not in the dictionary, concat any unknown character to the unknown chars temp var 
+
+
+Algo #4
+
+	Go through every possible combination (with bfs or dfs or something)
+	return the combination with the highest total frequency
+	This would probably break on words like 的确 though :/ because of the power of 的, maybe using the ln of the frequency would be better? Then 的 wouldn't have such a huge impact? I'd be willing to try that way. 
+
+
+
+
+Another Idea
+	Use tokinization to create a temp dictionary
+	If a string of characters appears more than once in a document, but it's not in the dictionary (I'd say if the string of chars is 3 or more) then add it to a temp dictionary, or temporarily add it to the global dict
+	When tokinizing, I guess I would cap it at 6? not too worried about it though. 
+
+
+check to see if unknown words are subsets of eachother?
+separate numbers from stop words?
+
+Add newline to stopwords?
+
+
+	Psuedo:
+		output = {}
+		left = 0
+		while left < len(text)
+
+			loop do
+				right = left + 1
+				word = text[left:right]
+				if word in stopwords
+					break
+				elsif word in dct.keys
+					right += 1
+				else: 
+					if word in output.keys
+						output[word]['count'] += 1
+					else
+						output[word] = {'count'=>1}
+					break
+
+
+
+Notes:
+n-grams are useful for recognizing new words (high frequency in the text being analyzed, but not in a dictionary), could use tokinization and collections for this. 
+
+custom dictionaries are useful to add to existing word lists. 
+
+If a list of low frequency characters start to string together, I should be able to recognize that as a proper noun and use google translate to look it up, maybe? or at least just tease it out? But it's likely emperical what frequency would work and what length of characters. 
+
+A list of stop characters needs to be maintained so that the full segmentation method isn't iterating to the end of the string every time. 
+
+It would also be useful and less for work me to include characters that were part of words found as part of larger dictionary entries.
+
+And I would also like to display the results as the largest dictionary items sorted by frequency, with their sub words sorted by frequency.
+
+It would be cool to show the charts and graphs associated with the text that I've been using to look at it
+an X/y Scatter was one of the charts 

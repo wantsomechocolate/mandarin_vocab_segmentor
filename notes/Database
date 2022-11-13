@@ -1,0 +1,21 @@
+Admin Tables
+User Tables 
+
+Dictionary Table
+Word,Pinyin,FreqGlobal,FreqNews,FreqBlog,FreqEtc.,Definition1,WordSource,Definition1Source
+
+
+UserDictionary
+This table is for users that want to update/edit/add dictionary entries
+So as long as it exists in the big dictionary table then you ony need
+User,Word,Definition,Pronunciation,Notes, Date Added, Date Modified
+
+
+Texts
+For texts that people paste in, the text itself, should I store them as files? Maybe even store them as files in the person's cache
+I think I want to try storing the pasted text in database fields, this isn't for pasting in entire books, and people can go chapter by chapter anyway, whats the point of a 1000 word vocab list. 
+
+User, Text, Length, 1 Char Tokens, 2 Char Tokens, 3 Char Tokens, 4 Char Tokens, 5 Char Tokens, 6 Char Tokens......
+Algorithm (longest matching), Word
+
+

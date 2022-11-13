@@ -1,0 +1,92 @@
+1.) Create the database files with active record
+	a.) global word list frequencies
+		global_word_frequency
+		blog_word_frequency
+		new_word_frequency 
+	b.) hsk_words
+			word
+			level2012
+			level2020
+
+	c.) user_words
+	d.) texts
+	f.) tokens
+		text_id
+		user_id #add later
+		token ##Just put simp or trad here at the time, I don't want to store both, I think it will be easy to convert, basically just a character by character conversion with two dicts for constant time two way lookups. 
+		count - integer
+		type - can be dict, bridge, token, stop, unknown
+
+
+	g.) definitions
+
+			simplified
+			traditional
+			definition
+			pronunciation
+
+			I found a source for this, but it only has 100000 or so entries
+			Some of the entries start with my current stop words (which are basically just all numbers)
+			I suppose I could check for dictionary entries first and then check for stop words
+
+			But essentially for parsing this file into a db, I need to strip off the top lines
+			then each line goes like this
+			繁体字 简体字 [pron1 nunciation2] /def1/def2/ 
+			
+			There are sometimes duplicate entries for surnames so keep that in mind when parsing
+			The python file they provide allows you to remove them, but I just want to append them to any other definitions. 
+
+			which one I use as the key can be decided when I call for the records and create the db? at least for the definitions
+			I think I might even only store simplified here 
+			I can always create copies of all the tables later if I want, and in the meantime I can have a global flag and if it is set
+			to true or false or whatever, I can convert all the characters on the way in and out. 
+
+
+
+2.) Clean up the dictionary files before importing
+	For example, the frequency dicts have mixed traditional and simplified characters, I found a ruby gem to 
+	convert between the two so maybe I will give it a try and basically if anything is in traditional I will remove it? I want to store only simplified and then convert on the fly for now. 
+
+	But how to handle characters my computer won't display, and also how to handle the characters I want to treat as stop chars... :/
+
+	I think I'm thinking too hard about the dictionary, I can't get passed 100000 in the frequency list anyway, I think the global list is overkill for my needs and most peoples needs that would need something like this. So just MOVE ON
+
+
+
+3.) converting between trad and simp and simp and trad
+		I think having a dictionary to convert between each makes sense?
+		like I need a map from simplified to traditional
+		Then a map from traditional to simplified.
+		Or I just have a map TO simplified? and if it's not in the map then leave it alone?
+
+		This is the definitive source for mapping the characters I guess?
+		https://zh.wikisource.org/wiki/%E9%80%9A%E7%94%A8%E8%A7%84%E8%8C%83%E6%B1%89%E5%AD%97%E8%A1%A8
+
+
+
+
+I need to go through the dictionaries after I get my trad to simp and simp to trad working and combine everything into a trad thing and add up all the frequencies into a simp only dictionary. 
+
+I may never get the conversion working, there are soo many special cases
+
+
+
+It might be useful to have a list of common chinese names and surnames to check against when converting from
+traditional to simplified, because then I can sort of be more confident that something is a name
+
+Or I could also just present the possibility that a character is a name and include it in the final thing 
+
+
+
+
+
+
+Algorithm
+I only need "To Canonical" working in order to have my apples to apples comparisons.
+There are still some exceptions, but for the most part there are no one to many conversions.
+If I ever need a "To Trad" conversion working I can use the source I found for 95% of conversions and memoized google translate API calls for the rest. 
+
+Step one, get "To Canonical" working
+Step two, get indexing of the original text to show the vocabulary words as they originally appear working. 
+
+treat unique things in the text as unique even if they have the same canonical representation, but I guess group them?
